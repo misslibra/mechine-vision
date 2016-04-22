@@ -1,0 +1,94 @@
+Enter file contents hereHerror hom_mat2d_compose(const Htuple MatrixA, const Htuple MatrixB, Htuple* MatrixMult)//矩阵相乘
+{
+	Htuple temp = new double[6];
+	*MatrixMult = temp;
+
+	temp[0] = MatrixA[0] * MatrixB[0] + MatrixA[1] * MatrixB[3];
+	temp[1] = MatrixA[0] * MatrixB[1] + MatrixA[1] * MatrixB[4];
+	temp[2] = MatrixA[0] * MatrixB[2] + MatrixA[1] * MatrixB[5] + MatrixA[2];
+
+	temp[3] = MatrixA[3] * MatrixB[0] + MatrixA[4] * MatrixB[3];
+	temp[4] = MatrixA[3] * MatrixB[1] + MatrixA[4] * MatrixB[4];
+	temp[5] = MatrixA[3] * MatrixB[2] + MatrixA[4] * MatrixB[5] + MatrixA[5];
+	return H_MSG_TRUE;
+}
+
+Herror hom_mat2d_invert(const Htuple HomMat2D, Htuple* HomMat2DInvert)
+{
+	double matDet = HomMat2D[0] * HomMat2D[4] - HomMat2D[3] * HomMat2D[1];
+	if (matDet == 0.0)
+	{
+		return H_MSG_FAIL;
+	}
+
+	double Det = 1.0 / matDet;
+	Htuple temp = new double[6];
+	*HomMat2DInvert = temp;
+	temp[0] = Det * HomMat2D[4];
+	temp[1] = Det * (-HomMat2D[1]);
+	temp[2] = Det * (HomMat2D[1] * HomMat2D[5] - HomMat2D[2] * HomMat2D[4]);
+
+	temp[3] = Det * (-HomMat2D[3]);
+	temp[4] = Det * HomMat2D[0];
+	temp[5] = Det * (HomMat2D[3] * HomMat2D[2] - HomMat2D[0] * HomMat2D[5]);
+
+	return H_MSG_TRUE;
+}
+
+Herror hom_mat2d_identity(Htuple* HomMat2DIdentity)
+{
+	Htuple temp = new double[6];
+	*HomMat2DIdentity = temp;
+	for (int i = 0; i < 6; i++)
+	{
+		temp[i] = 0.0;
+	}
+	temp[0] = 1.0;
+	temp[4] = 1.0;
+	return H_MSG_TRUE;
+}
+
+Herror hom_mat2d_translate(const Htuple HomMat2D, const double Tx, const double Ty, Htuple* HomMat2DTranslate)
+{
+	Htuple temp = new double[6];
+	*HomMat2DTranslate = temp;
+
+	temp[0] = HomMat2D[0];
+	temp[1] = HomMat2D[1];
+	temp[2] = HomMat2D[2] + Tx;
+
+	temp[3] = HomMat2D[3];
+	temp[4] = HomMat2D[4];
+	temp[5] = HomMat2D[5] + Ty;
+	return H_MSG_TRUE;
+}
+
+Herror hom_mat2d_rotate(const Htuple HomMat2D, const double Phi, const double Px, const double Py, Htuple* HomMat2DRotate)
+{
+	Htuple temp = new double[6];
+	temp[0] = cos(Phi);
+	temp[1] = -sin(Phi);
+	temp[2] = -Px * cos(Phi) + Py * sin(Phi) + Px;
+	temp[3] = sin(Phi);
+	temp[4] = cos(Phi);
+	temp[5] = -Py * cos(Phi) - Px * sin(Phi) + Py;
+
+	hom_mat2d_compose(temp, HomMat2D, HomMat2DRotate);
+	delete[] temp;
+	return H_MSG_TRUE;
+}
+
+Herror hom_mat2d_scale(const Htuple HomMat2D, const double Sx, const double Sy, const double Px, const double Py, Htuple* HomMat2DScale)
+{
+	Htuple temp = new double[6];
+	temp[0] = Sx;
+	temp[1] = 0;
+	temp[2] = Px * (1 - Sx);
+	temp[3] = 0;
+	temp[4] = Sy;
+	temp[5] = Py * (1 - Sy);
+
+	hom_mat2d_compose(temp, HomMat2D, HomMat2DScale);
+	delete[] temp;
+	return H_MSG_TRUE;
+}
