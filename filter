@@ -1,0 +1,64 @@
+Herror gauss_image(const HImage Image, HImage& ImageGauss, const Hlong Size)
+{
+	if (Image.image.empty() || Image.image.type() != CV_8UC1 || Size != 3)//|| Size != 5 || Size != 7 || Size != 9 || Size != 11
+	{
+		return H_MSG_FALSE;
+	}
+	double sigma = 0.0;
+	double sum = 0;
+	int neighR[9] = { -1, -1, -1, 0, 0, 0, 1, 1, 1 };
+	int neighC[9] = { -1, 0, 1, -1, 0, 1, -1, 0, 1 };
+	int width = Image.width;
+	int height = Image.height;
+	switch (Size)
+	{
+	case 3:sigma = 0.65 ;
+		//case 5:sigma = 0.87;
+		//case 7:sigma = 1.43;
+		//case 9:sigma = 1.88;
+		//case 11:sigma = 2.31;
+	}
+
+    double* Kernel = new double[Size * Size];
+	const int center = Size / 2;
+	const double s = -0.5 / (sigma * sigma);
+	const double t = 1 / (2 * Pi * sigma * sigma);
+	int index = 0;
+	double sumM = 0;
+	ImageGauss.image = Mat(Image.height, Image.width,CV_8UC1,Scalar(0));
+	for (int r = -center; r <= center;r++)
+	{
+		for (int c = -center; c <= center;c++)
+		{
+			Kernel[index] = t * exp(s * (r * r + c * c));
+			sumM += Kernel[index];
+			index++;
+		}
+	}
+	for (int i = 0; i < index;i++)
+	{
+		Kernel[i] = Kernel[i] / sumM;
+	}
+
+	for (int order = 1; order < Image.region[0]; order += 2)
+	{
+		for (int pos = Image.region[order]; pos < Image.region[order + 1];pos++)
+		{
+			int r = pos / width;
+			int c = pos % width;
+			double neightSum = 0;
+			for (int k = 0; k < 9; k++)
+			{
+				if (r + neighR[k] >= height || c + neighC[k] >= width || r + neighR[k] < 0 || c + neighC[k] < 0)
+					continue;
+				else
+				{
+					neightSum += (((uchar*)(Image.image.data + Image.image.step.p[0] * (r + neighR[k])))[(c + neighC[k])]) * Kernel[k];
+				}
+			}
+			((uchar*)(ImageGauss.image.data + ImageGauss.image.step.p[0] * r))[c] = cvRound(neightSum);
+		}
+	}
+	delete[] Kernel;
+	return H_MSG_TRUE;
+}
